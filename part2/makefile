@@ -9,18 +9,18 @@ DEFINE_COMMA	:= ,
 # Compilation Targets
 
 # Programs
-AS		:= nios2-elf-as
-CC		:= nios2-elf-gcc
-LD		:= nios2-elf-ld
-OC		:= nios2-elf-objcopy
+AS		:= arm-altera-eabi-as
+CC		:= arm-altera-eabi-gcc
+LD		:= arm-altera-eabi-ld
+OC		:= arm-altera-eabi-objcopy
 RM		:= rm -f
 
 # Flags
-USERCCFLAGS	:= -g -O1 -ffunction-sections -fverbose-asm -fno-inline -mno-cache-volatile
-ARCHASFLAGS	:= --gstabs -I "/opt/intelFPGA_lite/18.1/nios2eds/components/altera_nios2/sdk/inc/"
-ARCHCCFLAGS	:= -mno-hw-mul -mno-hw-div -I "/opt/intelFPGA_lite/18.1/nios2eds/components/altera_nios2/HAL/inc/" -DSYSTEM_BUS_WIDTH=32 -DALT_SINGLE_THREADED -D_JTAG_UART_BASE=4280291328u
-ARCHLDFLAGS	:= --defsym nasys_stack_top=0x4000000 --defsym nasys_program_mem=0x0 --defsym nasys_data_mem=0x0
-ARCHLDSCRIPT	:= --script="/opt/intelFPGA_lite/18.1/University_Program/Monitor_Program/build/nios_as_build.ld"
+USERCCFLAGS	:= -g -O1
+ARCHASFLAGS	:= -mfloat-abi=soft -march=armv7-a -mcpu=cortex-a9 --gstabs -I "$$GNU_ARM_TOOL_ROOTDIR/arm-altera-eabi/include/"
+ARCHCCFLAGS	:= -mfloat-abi=soft -march=armv7-a -mtune=cortex-a9 -mcpu=cortex-a9
+ARCHLDFLAGS	:= --defsym arm_program_mem=0x0 --defsym arm_available_mem_size=0x3ffffff8 --defsym __cs3_stack=0x3ffffff8
+ARCHLDSCRIPT	:= -T"/opt/intelFPGA_lite/18.1/University_Program/Monitor_Program/build/altera-socfpga-unhosted-as.ld"
 ASFLAGS		:= $(ARCHASFLAGS)
 CCFLAGS		:= -Wall -c $(USERCCFLAGS) $(ARCHCCFLAGS)
 LDFLAGS		:= $(ARCHLDFLAGS) $(ARCHLDSCRIPT) -e _start -u _start
@@ -34,11 +34,11 @@ OBJS		:= $(patsubst %, %.o, $(SRCS))
 # Targets
 compile: part2.srec
 
-part2.srec: part2.elf
+part2.srec: part2.axf
 	$(RM) $@
 	$(OC) $(OCFLAGS) $< $@
 
-part2.elf: $(OBJS)
+part2.axf: $(OBJS)
 	$(RM) $@
 	$(LD) $(LDFLAGS) $(OBJS) -o $@
 
@@ -51,5 +51,5 @@ part2.elf: $(OBJS)
 	$(AS) $(ASFLAGS) $< -o $@
 
 clean: 
-	$(RM) part2.srec part2.elf $(OBJS)
+	$(RM) part2.srec part2.axf $(OBJS)
 
