@@ -1,87 +1,163 @@
+
+/home/garje1-28/COMP231/LAB4/part1/part1.axf:     file format elf32-littlearm
+
+
+Disassembly of section .text:
+
+00000000 <__cs3_interrupt_vector>:
 .text
 .global _start
 
 _start:     
 			ldr			sp, =stack			//stack pointer                        
+   0:	e59fd0bc 	ldr	sp, [pc, #188]	; c4 <stack>
           	mov			r5, #0
+   4:	e3a05000 	mov	r5, #0
           	b			display
+   8:	ea00001e 	b	88 <display>
+
+0000000c <loop>:
 
 loop:
           	ldr			r1, =0xFF200050 		//KEY GPIO port,
+   c:	e59f10b4 	ldr	r1, [pc, #180]	; c8 <stack+0x4>
           	ldr			r0, [r1]          // read data
+  10:	e5910000 	ldr	r0, [r1]
     	  	and         r0, r0, #0xF        //lowest 4 bits (KEY0-KEY3)
+  14:	e200000f 	and	r0, r0, #15
     
     	  	cmp   	  	r0, #1              // check if KEY0 is pressed
+  18:	e3500001 	cmp	r0, #1
     	  	beq       	press_key0
+  1c:	0a000006 	beq	3c <press_key0>
 
     	  	cmp       	r0, #2              // check if KEY1 is pressed
+  20:	e3500002 	cmp	r0, #2
     	  	beq       	press_key1
+  24:	0a000006 	beq	44 <press_key1>
 
     	  	cmp       	r0, #4              // check if KEY2 is pressed
+  28:	e3500004 	cmp	r0, #4
     	  	beq       	press_key2
+  2c:	0a000006 	beq	4c <press_key2>
 
     	  	cmp       	r0, #8              // check if KEY3 is pressed
+  30:	e3500008 	cmp	r0, #8
     	  	beq       	press_key3
+  34:	0a000006 	beq	54 <press_key3>
 
     	  	b         	loop                // repeat the loop
+  38:	eafffff3 	b	c <loop>
+
+0000003c <press_key0>:
 
 press_key0:
     	  	mov       	r5, #0              // reset the counter to 0
+  3c:	e3a05000 	mov	r5, #0
     	  	b         	display
+  40:	ea000010 	b	88 <display>
+
+00000044 <press_key1>:
 
 press_key1:
     	  	add       	r5, r5, #1          // increment
+  44:	e2855001 	add	r5, r5, #1
     	  	b         	display
+  48:	ea00000e 	b	88 <display>
+
+0000004c <press_key2>:
 
 press_key2:
     	  	sub       	r5, r5, #1          // decrement 
+  4c:	e2455001 	sub	r5, r5, #1
     	  	b         	display
+  50:	ea00000c 	b	88 <display>
+
+00000054 <press_key3>:
 
 press_key3:
     	  	b 			blank
+  54:	ea000013 	b	a8 <blank>
+
+00000058 <wait>:
               
 wait:
 			ldr			r1, =0xFF200050
+  58:	e59f1068 	ldr	r1, [pc, #104]	; c8 <stack+0x4>
+
+0000005c <wait_loop>:
 wait_loop:
 			ldr			r0, [r1]
+  5c:	e5910000 	ldr	r0, [r1]
             and 		r0, r0, #0xF
+  60:	e200000f 	and	r0, r0, #15
             
             cmp 		r0, #0			//all keys released?
+  64:	e3500000 	cmp	r0, #0
             bne			wait_loop		//keep waiting
+  68:	1afffffb 	bne	5c <wait_loop>
             bx			lr
-            
+  6c:	e12fff1e 	bx	lr
+
+00000070 <bit_codes>:
+  70:	4f5b063f 	.word	0x4f5b063f
+  74:	077d6d66 	.word	0x077d6d66
+  78:	0000677f 	.word	0x0000677f
+
+0000007c <seg7_code>:
 
 bit_codes:  .byte   0b00111111, 0b00000110, 0b01011011, 0b01001111, 0b01100110
             .byte   0b01101101, 0b01111101, 0b00000111, 0b01111111, 0b01100111
             .skip   2  // pad with 2 bytes to maintain word alignment    
 
 seg7_code:  ldr     r1, =bit_codes  
+  7c:	e59f1048 	ldr	r1, [pc, #72]	; cc <stack+0x8>
             ldrb    r0, [r1, r0]    
+  80:	e7d10000 	ldrb	r0, [r1, r0]
             bx      lr
+  84:	e12fff1e 	bx	lr
+
+00000088 <display>:
             
 /* display r5 on hex1-0, r6 on hex3-2 and r7 on hex5-4 */
 display:    
 			str		lr, [sp, #-4]
+  88:	e50de004 	str	lr, [sp, #-4]
             mov		r0, r5
+  8c:	e1a00005 	mov	r0, r5
             bl      seg7_code    	// returns r0 converted to a bit code in r0  
+  90:	ebfffff9 	bl	7c <seg7_code>
             ldr     r8, =0xff200020 // base address of hex3-hex0
+  94:	e59f8034 	ldr	r8, [pc, #52]	; d0 <stack+0xc>
             str		r0, [r8]
+  98:	e5880000 	str	r0, [r8]
             bl		wait	 
+  9c:	ebffffed 	bl	58 <wait>
             ldr		lr, [sp], #4
+  a0:	e49de004 	pop	{lr}		; (ldr lr, [sp], #4)
             b		loop  
+  a4:	eaffffd8 	b	c <loop>
+
+000000a8 <blank>:
  
 blank:
 	 		str		lr, [sp, #-4]
+  a8:	e50de004 	str	lr, [sp, #-4]
             ldr		r8, =0xff200020
+  ac:	e59f801c 	ldr	r8, [pc, #28]	; d0 <stack+0xc>
             mov		r0, #0
+  b0:	e3a00000 	mov	r0, #0
             str		r0, [r8]
+  b4:	e5880000 	str	r0, [r8]
             bl		wait
+  b8:	ebffffe6 	bl	58 <wait>
             ldr		lr, [sp], #4
+  bc:	e49de004 	pop	{lr}		; (ldr lr, [sp], #4)
             b		loop
-            
-stack:         
-.end
+  c0:	eaffffd1 	b	c <loop>
 
-//Things to do:
-//Mkae a WAIT subroutine that doesnt go to loop until (r0?) is zero
-//keep display as reading from base address but instead of all the 1s make the screen dis paly 0b00000whatever
+000000c4 <stack>:
+  c4:	000000c4 	.word	0x000000c4
+  c8:	ff200050 	.word	0xff200050
+  cc:	00000070 	.word	0x00000070
+  d0:	ff200020 	.word	0xff200020
